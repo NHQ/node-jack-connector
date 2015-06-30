@@ -34,11 +34,11 @@ function audioProcess(err, nframes) {
 		return;
 	}
 
-	var ret = [], deg = 0;
+	var ret = new Float32Array(nframes), deg = 0;
 	for (var i=0; i<nframes; i++) {
 		if (++last >= step) last = 0;
 		deg = relativeVal(last, 0, step, 0, 360);
-		ret.push(Math.sin( deg * (Math.PI / 180) ));
+		ret[i] = deg * (Math.PI / 180);
 	}
 	return { out: ret };
 }

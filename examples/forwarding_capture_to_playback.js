@@ -24,7 +24,7 @@ function audioProcess(err, nframes, capture) {
 		process.exit(1);
 		return;
 	}
-
+console.log(capture.in_l.constructor.name)
 	return {
 		out_l: capture.in_l,
 		out_r: capture.in_r,
