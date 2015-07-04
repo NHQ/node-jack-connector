@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "debounce": "^1.0.0",
+    "midi": "^0.9.3",
     "serialport": "^1.7.4"
   }
 }
