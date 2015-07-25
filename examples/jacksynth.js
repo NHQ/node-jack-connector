@@ -3,7 +3,7 @@ var jackClientName = 'JACK connector - forwarding capture to playback example';
 jackConnector.openClientSync(jackClientName);
 var sr = jackConnector.getSampleRateSync()
 
-module.exports = function(fn){
+module.exports = function(fn, mic){
 
   console.log('Opening JACK client...');
   console.log('Registering JACK ports...');

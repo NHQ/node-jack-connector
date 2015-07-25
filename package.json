@@ -38,8 +38,14 @@
     "src": "./src"
   },
   "dependencies": {
+    "buffer-converter": "^1.0.0",
     "debounce": "^1.0.0",
+    "es666": "^0.6.0",
+    "gaze": "^0.5.1",
+    "jdelay": "^9.1.0",
     "midi": "^0.9.3",
-    "serialport": "^1.7.4"
+    "node-xhr": "^1.0.5",
+    "serialport": "^1.7.4",
+    "xmlhttprequest": "^1.7.0"
   }
 }
