@@ -45,6 +45,7 @@
     "jdelay": "^9.1.0",
     "midi": "^0.9.3",
     "node-xhr": "^1.0.5",
+    "oscillators": "^1.0.0",
     "serialport": "^1.7.4",
     "xmlhttprequest": "^1.7.0"
   }

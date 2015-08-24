@@ -9,16 +9,17 @@ if(argv.i){
   fs.readFile(argv.i, function(e, data){
     data = convert.toArrayBuffer(data)
     decode(data).then(function(audio){
-      console.log(sr, audio.sampleRate, audio.channelData[0].length)
       if(!(audio.sampleRate === sr)){
-        audio.channelData.map(function(e){
+        console.log(sr, audio.sampleRate, audio.channelData[0].length)
+        audio.channelData = audio.channelData.map(function(e){
           var resampler = new resample(audio.sampleRate, sr, 1, e.length * sr / audio.sampleRate) 
           return resampler.resampler(e)
         })
       }
-      dsp = function(t, i){
-        return audio.channelData[0][i]
+      dsp = function(t, i, s){
+        return  audio.channelData[0][i % audio.channelData[0].length]
       }
+      console.log(dsp)
     }).catch(console.log)
 
 
@@ -29,15 +30,27 @@ var gaze = require('gaze')
 XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest // yup
 var eat = require('es666')
 
-var dsp = function(t, s, i){
+var fileIn = function(t, s){
   return 0
+}
+
+var dsp = function(t, s, i){
+  return i
 }
 
 gaze('./live-code.js', function(err, watch){
   watch.on('changed', function(){
     fs.readFile('./live-code.js', 'utf8', function(err, code){
+      console.log(code)
       try{
-        require('./live-code.js')
+        
+        eat(code, function(err, ret, fn){
+          dsp = ret
+          console.log(ret)
+       //   if(ret) dsp = ret
+        })
+        //dsp = require('./live-code.js')
+        //console.log(dsp)
       }
       catch(e){
         eat(code, function(err, ret, fn){
@@ -80,7 +93,7 @@ var delayos = []
 
 var setDelays = function(){
   delayos = map.map(function(e, i){
-     return jdelay(Math.floor(spb * (e) * dmod), (( 1 + i) / delayos.length) * fbmod, dmix)
+     return jdelay(Math.max(1, Math.floor(spb * (e) * dmod)), (( 1 + i) / delayos.length) * fbmod, dmix)
   })
 }
 
@@ -157,7 +170,7 @@ function getDelays(i){
     }
     else{
       return   (i + delayos.reduce(function(a, delay, y){
-        return    (delay(a, Math.floor(spb * (map[y]) * dmod),  ((1 + y) / delayos.length) * fbmod, dmix)) // delayos.length 
+        return    i + (delay(a, Math.floor(spb * (map[y]) * dmod),  ((1 + y) / delayos.length) * fbmod, dmix)) // delayos.length 
       }, i) ) / 2
     }
   }
@@ -186,12 +199,14 @@ function getLoops(inp){
 
 var music = function(t, s, i){
     
-  var inp = i[0] + i[1]
-  inp /= 2
+  var inp = 0//i[0] + i[1]
+  var exp = inp
+  inp = dsp(t, s, inp)
+  //inp /= 3
   //var l = getLoops(inp)
   //i[0] = i[1] = getDelays(dsp(t, s))
   
-  i[0] = i[1] = getDelays(inp) //+ l
+  i[0] = i[1] = getDelays(inp)//dsp(t, s, i))//getDelays(dsp(t, s, i)) //+ l
 
 }
 
