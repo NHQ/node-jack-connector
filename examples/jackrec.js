@@ -3,8 +3,6 @@
 
 var argv = require('minimist')(process.argv.slice(2))
 var fs = require('fs')
-var spawn = require('child_process').spawn
-
 var path = require('path')
 
 var jackConnector = require('../index.js');
@@ -12,21 +10,7 @@ var jackClientName = 'JACK connector - ' + new Date().getTime().toString();
 jackConnector.openClientSync(jackClientName);
 var sr = jackConnector.getSampleRateSync()
 
-if(argv.r){
-console.log('recprdom')
-  var argz = ['./jackrec.js', '-r']
-  if(argv.m) argz.push('-m')
-  if(argv.o) {
-    argz.push('-o')
-    argz.push(argv.o)
-  }
-  argz.push('-c')
-  argz.push(jackClientName)
-  var rec = spawn('node', argz)
-  rec.stdout.on('data', function(data){
-    console.log(data.toString())
-  })
-}
+//  see below module.exports for spawn action
 
 module.exports = function(fn, mic){
 
@@ -42,7 +26,7 @@ module.exports = function(fn, mic){
   var sampleCount = 0
   var sr = jackConnector.getSampleRateSync()
   console.log('sampleRate = %d', sr)
-  var wb = new Buffer(4)
+  var wb = new Buffer(1024 * 4)
 
   function audioProcess(err, nframes, capture) {
     if (err) {
@@ -56,13 +40,13 @@ module.exports = function(fn, mic){
 
     for(var x = 0; x < nframes; x++){
         input.splice(0, 2, capture.in_l[x], capture.in_r[x])
-        time = sampleCount / sr
-        fn(time, sampleCount, input)
         out.out_l[x] = input[0]
         out.out_r[x] = input[1]
+        wb.writeFloatLE((input[0] + input[1]) / 2, x * 4)
         sampleCount++
     }
     
+    ws.write(wb)
     var _out = {
       out_l: capture.in_l,
       out_r: capture.in_r,
@@ -79,10 +63,20 @@ module.exports = function(fn, mic){
   jackConnector.activateSync();
 
   console.log('Auto-connecting to hardware ports...');
-  jackConnector.connectPortSync('system:capture_1', jackClientName + ':in_l');
-  jackConnector.connectPortSync('system:capture_2', jackClientName + ':in_r');
-  jackConnector.connectPortSync(jackClientName + ':out_l', 'system:playback_1');
-  jackConnector.connectPortSync(jackClientName + ':out_r', 'system:playback_2');
+  
+  if(!argv.c){ // none connected
+    jackConnector.connectPortSync('system:capture_1', jackClientName + ':in_l');
+    jackConnector.connectPortSync('system:capture_2', jackClientName + ':in_r');
+  }
+  else{
+    jackConnector.connectPortSync(argv.c + ':out_l', jackClientName + ':in_l');
+    jackConnector.connectPortSync(argv.c + ':out_r', jackClientName + ':in_r');
+  }
+
+  if(argv.m){ // monitor
+    jackConnector.connectPortSync(jackClientName + ':out_l', 'system:playback_1');
+    jackConnector.connectPortSync(jackClientName + ':out_r', 'system:playback_2');
+  }
 
   (function mainLoop() {
     console.log('Main loop is started.');
@@ -105,5 +99,19 @@ module.exports = function(fn, mic){
     });
   });
 }
-
 module.exports.sampleRate = sr
+
+if(argv.r){ // record
+
+  var name = argv.o || new Date().toISOString()
+  var loc = path.resolve(__dirname, name)
+  loc += '.' + (sr) + '.mono'
+  var ws = fs.createWriteStream(loc)
+  process.on('SIGINT', function(){
+    ws.close(function(){
+      process.exit()
+    })
+  }) 
+  module.exports()
+}
+

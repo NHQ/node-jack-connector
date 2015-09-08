@@ -47,6 +47,8 @@
     "node-xhr": "^1.0.5",
     "oscillators": "^1.0.0",
     "serialport": "^1.7.4",
+    "wav-encoder": "^0.3.0",
+    "wave-file-stream": "0.0.0",
     "xmlhttprequest": "^1.7.0"
   }
 }

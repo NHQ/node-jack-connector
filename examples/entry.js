@@ -5,11 +5,13 @@ var fs = require('fs')
 var decode = require('wav-decoder').decode
 var convert = require('buffer-converter')
 var resample = require('./resampler')
+var sr = 48000 // redefined below #lazy
+
 if(argv.i){
   fs.readFile(argv.i, function(e, data){
     data = convert.toArrayBuffer(data)
     decode(data).then(function(audio){
-      if(!(audio.sampleRate === sr)){
+      if(!(audio.sampleRate === sr)){ 
         console.log(sr, audio.sampleRate, audio.channelData[0].length)
         audio.channelData = audio.channelData.map(function(e){
           var resampler = new resample(audio.sampleRate, sr, 1, e.length * sr / audio.sampleRate) 
@@ -73,7 +75,7 @@ var input = new midi.input()
 input.openPort(1)
 
 var jsynth = require('./jacksynth')
-var sr = jsynth.sampleRate
+sr = jsynth.sampleRate
 var jdelay = require('jdelay')
 var bpm =  argv.bpm || 151
 var secpb = bpm / 60
@@ -199,9 +201,9 @@ function getLoops(inp){
 
 var music = function(t, s, i){
     
-  var inp = 0//i[0] + i[1]
+  var inp = i[0] + i[1]
   var exp = inp
-  inp = dsp(t, s, inp)
+  //inp += dsp(t, s, inp)
   //inp /= 3
   //var l = getLoops(inp)
   //i[0] = i[1] = getDelays(dsp(t, s))
