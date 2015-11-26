@@ -11,17 +11,15 @@ var sr = 48000 // #lazy
 if(argv.i){
 
   var ext = path.extname(argv.i)
-  if(ext === '.mono'){
+  if(ext === '-mono.raw'){
     fs.readFile(argv.i, function(e, data){
       if(e) console.log(e)
 
       var _sr = argv.i.split('.') 
       _sr = parseInt(_sr[_sr.length - 2])
       data = new Float32Array(convert.toArrayBuffer(data))
-      console.log(data.length)
-      
 
-      if(false){  //\#lazy
+      if(!(_sr === sr)){  //\#lazy
         var resampler = new resample(_sr, sr, 1, data.length * sr / _sr) 
         resampler.resampler(data)
       }
@@ -54,6 +52,7 @@ if(argv.i){
     })
   }
 }
+
 var gaze = require('gaze')
 XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest // yup
 var eat = require('es666')
@@ -159,13 +158,14 @@ function getLoops(inp){
 var music = function(t, s, i){
     
   var inp = i[0] + i[1]
-  var exp = inp
-  //inp = dsp(t, s, inp)
+  
+  inp += dsp(t, s, inp) 
+  //inp /= 3
   //inp /= 3
   //var l = getLoops(inp)
   //i[0] = i[1] = getDelays(dsp(t, s))
   
-  i[0] = i[1] = dsp(t, s, inp) //getDelays(inp)//dsp(t, s, i))//getDelays(dsp(t, s, i)) //+ l
+  i[0] = i[1] = inp//getDelays(inp)//dsp(t, s, i))//getDelays(dsp(t, s, i)) //+ l
 
 }
 

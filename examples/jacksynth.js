@@ -13,7 +13,6 @@ jackConnector.openClientSync(jackClientName);
 var sr = jackConnector.getSampleRateSync()
 
 if(argv.r){
-console.log('recprdom')
   var argz = ['./jackrec.js', '-r']
   if(argv.m) argz.push('-m')
   if(argv.o) {

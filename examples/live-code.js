@@ -1,27 +1,32 @@
+var ms = [2,5,-3,4,1,-5,13,3,3,0,2,2,0]
 
-var osc = require('oscillators')
-var amod = require('amod')
-
-var x = 2
-var ttt = false
-return specialX
-
-
-function dsp(t){
-  var bpm = 144 / 60
-  t *= bpm
- //return osc.square(t, 442 * Math.pow(2, 3/12) * osc.sine(t,  ))
-}
-
-function specialX(t){
-  //t *= 144 / 60
-  if(t > 12 * x) x+=4   
-  if(!ttt) ttt = t
-  //t -= ttt || 0
-  t *= 72 / 60 * x  
-  t = t * (5) % 12 % t
-  var a = 1//amod(.85, .15, t, 3)
+return function (t) {
+  var xt = t%8>5?2:8
+  var tt = t%(1+sin(1)/xt)+0.5
+  var m = ms[Math.floor(t*2)%ms.length]
+  var xm = Math.pow(2,m/12)
+  var a = sin_(2+sin_(sin(4),tt),tt)
+    * sin(4) * sin(1/2) * sin(400) * 0.5
+  var b = (0
+      + saw(xm*80) + saw(xm*80.1)
+    ) * sin(4) * 0.6
+  var c = (0
+    + saw(400+sin(1/4)/4) * 0.4
+    + saw(400+sin(1/4)/4+0.25) * 0.4
+    + saw(750+sin(1/4)/2-0.13) * 0.4
+  )*(1-sin((t+2)%4>3?8:1))/2
+  if (t % 32 > 24) return a*0.25 + b*0.25 + c
   return 0
-    + osc.sine(t, 120 + osc.triangle(t, amod(.5, .21, t, 1/4) * osc.triangle(t, 2))) * a
-    + osc.sine(t, 360 + (amod(.5, .21, t, 1/6) * osc.triangle(t, 3))) * a
-} 
+    + a*0.5 + b*0.5
+    + c*sin(400+xm*100)*sin(1) * 0.4
+
+  function tri_ (x,t) { return Math.abs(1 - t % (1/x) * x * 2) * 2 - 1 }
+  function tri (x) { return tri_(x,t) }
+  function saw_ (x,t) { return t%(1/x)*x*2-1 }
+  function saw (x) { return saw_(x,t) }
+  function sin_ (x,t) { return Math.sin(2 * Math.PI * t * x) }
+  function sin (x) { return sin_(x,t) }
+  function sq_ (x,t) { return t*x % 1 < 0.5 ? -1 : 1 }
+  function sq (x) { return sq_(x,t) }
+  function clamp (x) { return Math.max(-1,Math.min(1,x)) }
+}

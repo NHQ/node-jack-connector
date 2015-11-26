@@ -61,8 +61,6 @@ module.exports = function(fn, mic){
 
   console.log('Activating JACK client...');
   jackConnector.activateSync();
-
-  console.log('Auto-connecting to hardware ports...');
   
   if(!argv.c){ // none connected
     jackConnector.connectPortSync('system:capture_1', jackClientName + ':in_l');
