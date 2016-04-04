@@ -103,7 +103,7 @@ if(argv.r){ // record
 
   var name = argv.o || new Date().toISOString()
   var loc = path.resolve(__dirname, name)
-  loc += '.' + (sr) + '.mono'
+  loc += '.' + (sr) + '.mono.raw'
   var ws = fs.createWriteStream(loc)
   process.on('SIGINT', function(){
     ws.close(function(){

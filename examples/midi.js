@@ -1,118 +1,38 @@
 Promise = require('es6-promise').Promise
+var $ = require('../../../polysynth/cheatcode')
+
 var argv = require('minimist')(process.argv.slice(2))
 var fs = require('fs')
+var script = fs.readFileSync('./keys.js', 'utf8')
 var decode = require('wav-decoder').decode
 var convert = require('buffer-converter')
 var resample = require('./resampler')
 var sr = 48000 // redefined below #lazy
 
-if(argv.i){
-
-  var ext = path.extname(argv.i)
-  if(ext === '.mono' || ext === '.raw'){
-    fs.readFile(argv.i, function(e, data){
-      if(e) console.log(e)
-
-      var _sr = argv.i.split('.') 
-      _sr = parseInt(_sr[_sr.length - 2])
-      data = new Float32Array(convert.toArrayBuffer(data))
-
-      if(!(_sr === sr)){  //\#lazy
-        var resampler = new resample(_sr, sr, 1, data.length * sr / _sr) 
-        resampler.resampler(data)
-      }
-
-      dsp = function(t, i, s){
-        return  data[i % data.length]
-      }
-      
-
-    })
-  } 
-  else{
-    fs.readFile(argv.i, function(e, data){
-      data = convert.toArrayBuffer(data)
-      decode(data).then(function(audio){
-        if(!(audio.sampleRate === sr)){
-          console.log(sr, audio.sampleRate, audio.channelData[0].length)
-          audio.channelData = audio.channelData.map(function(e){
-            var resampler = new resample(audio.sampleRate, sr, 1, e.length * sr / audio.sampleRate) 
-            return resampler.resampler(e)
-          })
-        }
-        dsp = function(t, i, s){
-          return  audio.channelData[0][i % audio.channelData[0].length]
-        }
-        console.log(dsp)
-      }).catch(console.log)
-
-
-    })
-  }
-}
-/*
-if(argv.i){
-  fs.readFile(argv.i, function(e, data){
-    data = convert.toArrayBuffer(data)
-    decode(data).then(function(audio){
-      if(!(audio.sampleRate === sr)){ 
-        console.log(sr, audio.sampleRate, audio.channelData[0].length)
-        audio.channelData = audio.channelData.map(function(e){
-          var resampler = new resample(audio.sampleRate, sr, 1, e.length * sr / audio.sampleRate) 
-          return resampler.resampler(e)
-        })
-      }
-      dsp = function(t, i, s){
-        return  audio.channelData[0][i % audio.channelData[0].length]
-      }
-      console.log(dsp)
-    }).catch(console.log)
-
-
-  })
-
-}
-*/
-var gaze = require('gaze')
-XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest // yup
-var eat = require('es666')
-
-var fileIn = function(t, s){
-  return 0
-}
-
 var dsp = function(t, s, i){
-  return 0
+  return i
 }
+var live = dsp
 
-gaze('./live-code.js', function(err, watch){
+var gaze = require('gaze')
+
+XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest // yup
+
+gaze('./keys.js', function(err, watch){
   watch.on('changed', function(){
-    fs.readFile('./live-code.js', 'utf8', function(err, code){
-      console.log(code)
-      try{
-        
-        eat(code, function(err, ret, fn){
-          dsp = ret
-          console.log(ret)
-       //   if(ret) dsp = ret
-        })
-        //dsp = require('./live-code.js')
-        //console.log(dsp)
-      }
-      catch(e){
-        eat(code, function(err, ret, fn){
-          if(ret) dsp = ret
-        })
-      }
+    fs.readFile('./keys.js', 'utf8', function(err, code){
+      keys = new Function(['generator', '$'], code)(generator, $)
     })
   })
 })
 
-var debounce = require('debounce')
-sp = require('serialport')
-SP = sp.SerialPort
-//port = new SP('/dev/ttyACM0')
-
+gaze('./live-code.js', function(err, watch){
+  watch.on('changed', function(){
+    fs.readFile('./live-code.js', 'utf8', function(err, code){
+      live = new Function([ '$'], code)( $)
+    })
+  })
+})
 
 var midi = require('midi')
 var input = new midi.input()
@@ -132,21 +52,28 @@ var pressMods = {}
 pressMods.pedal1 = false
 var durr = 3
 var fbmod =  argv.f || 1
+var time = 0
 var map
 if(argv._.length > 0) map = argv._.map(Number)
 else map = [2,4,8] 
 
 var delayos = []
 
+var timer = $.jsync(bpm, sr)
+var generator = new $.chrono()
+
 var setDelays = function(){
   delayos = map.map(function(e, i){
      return jdelay(Math.max(1, Math.floor(spb * (e) * dmod)), (( 1 + i) / delayos.length) * fbmod, dmix)
   })
-}
 
+}
+var keys = new Function(['generator', '$'], script)(generator, $)
+console.log(keys.toString())
 input.on('message', function(d, m){
   var data = m.toString().split(',')
-  //:wconsole.log(data)
+  //console.log(data)
+  keys(time, data)
   console.log(data, d)
   if(data[0] === '176'){
     if(data[1].match('67')){
@@ -245,16 +172,19 @@ function getLoops(inp){
 }
 
 var music = function(t, s, i){
-    
-  var inp = i[0] + i[1]
-  var exp = inp
+  time = t
+  timer.tick.call(timer, t)
+  var ii = i[0] + i[1]
+  // exluding line-in
+  i[0] = i[1] = (live(t, s, generator.tick(t, s, i))) / 2
+
   //var xdsp = dsp(t, s, inp)
   //inp += dsp
   //inp /= 3
   //var l = getLoops(inp)
   //i[0] = i[1] = getDelays(dsp(t, s))
   
-  i[0] = i[1] = getDelays(inp) //+ (dsp(t,s, inp) * .25)//+ dsp(t, s, i)//dsp(t, s, i))//getDelays(dsp(t, s, i)) //+ l
+  //i[0] = i[1] =0// getDelays(inp) //+ (dsp(t,s, inp) * .25)//+ dsp(t, s, i)//dsp(t, s, i))//getDelays(dsp(t, s, i)) //+ l
 
 }
 
@@ -264,57 +194,3 @@ var fns = [0,1,2,3].map(function(e){
   if(e === 0) v = 1
   return false//button(e, v)
 })
-/*
-port.on('open', function(){
-  console.log('open')
-})
-*/
-/*
-port.on('data', function(data, x){
-  var data = data.toString().split(',')
-  if(!isNaN(data[0]))  fns[data[0]](parseInt(data[1]))
-
-})
-
-function button(i, v){
-  return debounce(function(data){
-    console.log(data)
-    switch(i){
-      case 0:
-        // start / stop loop 
-        if(recording){
-        
-          var delay = jdelay(loop.length, 1, 1)
-          loop.forEach(delay)
-          loops.push(delay)
-          loop = []
-          recording = false
-
-        }
-        else{
-          recording = true
-        }
-
-      break
-      case 1:
-        pressMods['pedal1'] = !pressMods['pedal1']
-        console.log('hobble mode = %s', !pressMods['pedal1'])
-        // what
-      break
-      case 2:
-        //  override delays
-        mix = !mix
-        console.log('passthrough mode = %s', mix)
-      break
-      case 3:
-        //  clear delays
-        setDelays(data/18500)
-      break
-    }
-    //console.log(i, data)
-  }, v || 100, true)
-}
-
-//var jsynth = require('./jacksynth')
-//var sr = jsynth.sampleRate
-*/
