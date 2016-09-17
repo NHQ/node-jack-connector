@@ -67,8 +67,8 @@ module.exports = function(fn, mic){
     jackConnector.connectPortSync('system:capture_2', jackClientName + ':in_r');
   }
   else{
-    jackConnector.connectPortSync(argv.c + ':out_l', jackClientName + ':in_l');
-    jackConnector.connectPortSync(argv.c + ':out_r', jackClientName + ':in_r');
+    jackConnector.connectPortSync(argv.c + ':out_1', jackClientName + ':in_l');
+    jackConnector.connectPortSync(argv.c + ':out_2', jackClientName + ':in_r');
   }
 
   if(argv.m){ // monitor

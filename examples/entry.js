@@ -253,8 +253,8 @@ var music = function(t, s, i){
   //inp /= 3
   //var l = getLoops(inp)
   //i[0] = i[1] = getDelays(dsp(t, s))
-  
   i[0] = i[1] = getDelays(inp) //+ (dsp(t,s, inp) * .25)//+ dsp(t, s, i)//dsp(t, s, i))//getDelays(dsp(t, s, i)) //+ l
+  if(!i[0]) console.log('synth', i) 
 
 }
 
