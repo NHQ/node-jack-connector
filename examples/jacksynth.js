@@ -32,16 +32,27 @@ module.exports = function(fn, mic){
   console.log('Opening JACK client...');
   console.log('Registering JACK ports...');
 
-  jackConnector.registerInPortSync('in_l');
-  jackConnector.registerInPortSync('in_r');
-  jackConnector.registerOutPortSync('out_l');
-  jackConnector.registerOutPortSync('out_r');
 
   var time = 0;
   var sampleCount = 0
   var sr = jackConnector.getSampleRateSync()
+  var bufSize = jackConnector.getBufferSizeSync()
   console.log('sampleRate = %d', sr)
+  console.log(bufSize)
+  var ports = jackConnector.getAllPortsSync()
+  var caps = ports.map(function(e){
+    return e.match('capture') ? e : false
+  }).filter(Boolean)
+  console.log(caps)
   var wb = new Buffer(4)
+  var _out = caps.reduce(function(a, e, i){
+    var arr = new Array(bufSize)
+    for(var x = 0; x < bufSize; x++){
+      arr[x] = 0
+    }
+    a['out_' + (i + 1)] = arr 
+    return a
+  }, {})
 
   function audioProcess(err, nframes, capture) {
     if (err) {
@@ -49,24 +60,19 @@ module.exports = function(fn, mic){
       process.exit(1);
       return;
     }
-    var out = {out_l: capture.in_l, out_r: capture.in_r}
+    //var out = _out//{out_1: capture.in_1, out_2: capture.in_2}
 
     var input = []
 
     for(var x = 0; x < nframes; x++){
-        input.splice(0, 2, capture.in_l[x], capture.in_r[x])
+        input.splice(0, 2, capture.in_1[x], capture.in_2[x])
         time = sampleCount / sr
         fn(time, sampleCount, input)
-        out.out_l[x] = input[0]
-        out.out_r[x] = input[1]
+        _out.out_1[x] = input[0]
+        _out.out_2[x] = input[1]
         sampleCount++
     }
     
-    var _out = {
-      out_l: capture.in_l,
-      out_r: capture.in_r,
-    };
-    return out
     return _out
     
   }
@@ -78,12 +84,20 @@ module.exports = function(fn, mic){
   jackConnector.activateSync();
 
   console.log('Auto-connecting to hardware ports...');
-  jackConnector.connectPortSync('system:capture_1', jackClientName + ':in_l');
-  jackConnector.connectPortSync('system:capture_2', jackClientName + ':in_r');
-  jackConnector.connectPortSync(jackClientName + ':out_l', 'system:playback_1');
-  jackConnector.connectPortSync(jackClientName + ':out_r', 'system:playback_2');
+  console.log(ports)
+  caps.forEach(function(e,i){
+    console.log(e,i)
+    jackConnector.registerInPortSync('in_' + (i+1));
+    jackConnector.registerOutPortSync('out_' + (i + 1));
+    jackConnector.connectPortSync(e, jackClientName + ':in_' + (i+1));
+    jackConnector.connectPortSync(jackClientName + ':out_' + (i+1), 'system:playback_' + (i+1));
+  })  
+  //jackConnector.connectPortSync('system:capture_1', jackClientName + ':in_l');
+//  jackConnector.connectPortSync('system:capture_2', jackClientName + ':in_r');
+  //jackConnector.connectPortSync(jackClientName + ':out_l', 'system:playback_1');
+  //jackConnector.connectPortSync(jackClientName + ':out_r', 'system:playback_2');
 
-  (function mainLoop() {
+  ;(function mainLoop() {
     console.log('Main loop is started.');
     setTimeout(mainLoop, 1000000000);
   })();

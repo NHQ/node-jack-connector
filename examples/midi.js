@@ -74,7 +74,6 @@ input.on('message', function(d, m){
   var data = m.toString().split(',')
   //console.log(data)
   keys(time, data)
-  console.log(data, d)
   if(data[0] === '176'){
     if(data[1].match('67')){
       pressMods[data[1]] = data[2] === '127' ? true : false    

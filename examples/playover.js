@@ -158,12 +158,12 @@ var music = function(t, s, i){
     
   var inp = i[0] + i[1]
   
-  //inp = dsp(t, s, inp) || 0 
   //inp /= 3
   //var l = getLoops(inp)
   //i[0] = i[1] = getDelays(dsp(t, s))
   
-  i[0] = i[1] = inp//getDelays(inp)//dsp(t, s, i))//getDelays(dsp(t, s, i)) //+ l
+  i[0] = i[1] = getDelays(inp)//dsp(t, s, i))//getDelays(dsp(t, s, i)) //+ l
+  + dsp(t, s, inp) || 0 
 
 }
 
