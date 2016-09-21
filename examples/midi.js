@@ -37,7 +37,7 @@ gaze('./live-code.js', function(err, watch){
 var midi = require('midi')
 var input = new midi.input()
 
-input.openPort(1)
+//input.openPort(1)
 
 var jsynth = require('./jacksynth')
 sr = jsynth.sampleRate
@@ -69,7 +69,6 @@ var setDelays = function(){
 
 }
 var keys = new Function(['generator', '$'], script)(generator, $)
-console.log(keys.toString())
 input.on('message', function(d, m){
   var data = m.toString().split(',')
   //console.log(data)

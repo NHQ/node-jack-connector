@@ -1,6 +1,3 @@
-//Promise = require('es6-promise').Promise
-//var encoder = require('wav-file-stream')
-
 var argv = require('minimist')(process.argv.slice(2))
 var fs = require('fs')
 var path = require('path')
@@ -62,13 +59,13 @@ module.exports = function(fn, mic){
   console.log('Activating JACK client...');
   jackConnector.activateSync();
   
-  if(!argv.c){ // none connected
+  if(!argv.cli){ // none connected
     jackConnector.connectPortSync('system:capture_1', jackClientName + ':in_l');
     jackConnector.connectPortSync('system:capture_2', jackClientName + ':in_r');
   }
   else{
-    jackConnector.connectPortSync(argv.c + ':out_1', jackClientName + ':in_l');
-    jackConnector.connectPortSync(argv.c + ':out_2', jackClientName + ':in_r');
+    jackConnector.connectPortSync(argv.cli + ':out_1', jackClientName + ':in_l');
+    jackConnector.connectPortSync(argv.cli + ':out_2', jackClientName + ':in_r');
   }
 
   if(argv.m){ // monitor

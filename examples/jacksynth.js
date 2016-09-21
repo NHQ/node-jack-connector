@@ -1,6 +1,3 @@
-//Promise = require('es6-promise').Promise
-//var encoder = require('wav-file-stream')
-
 var argv = require('minimist')(process.argv.slice(2))
 var fs = require('fs')
 var spawn = require('child_process').spawn
@@ -19,8 +16,12 @@ if(argv.r){
     argz.push('-o')
     argz.push(argv.o)
   }
-  argz.push('-c')
+  argz.push('--cli')
   argz.push(jackClientName)
+  if(argv.c){
+    argz.push('-c')
+    argz.push(argv.c)
+  }
   var rec = spawn('node', argz)
   rec.stdout.on('data', function(data){
     console.log(data.toString())
@@ -29,21 +30,20 @@ if(argv.r){
 
 module.exports = function(fn, mic){
 
-  console.log('Opening JACK client...');
-  console.log('Registering JACK ports...');
-
+  //console.log('Opening JACK client...');
+  //console.log('Registering JACK ports...');
 
   var time = 0;
   var sampleCount = 0
   var sr = jackConnector.getSampleRateSync()
   var bufSize = jackConnector.getBufferSizeSync()
   console.log('sampleRate = %d', sr)
-  console.log(bufSize)
-  var ports = jackConnector.getAllPortsSync()
+  console.log('bufSize = %d', bufSize)
+  var channels
+  var ports = channels = jackConnector.getAllPortsSync()
   var caps = ports.map(function(e){
     return e.match('capture') ? e : false
   }).filter(Boolean)
-  console.log(caps)
   var wb = new Buffer(4)
   var _out = caps.reduce(function(a, e, i){
     var arr = new Array(bufSize)
@@ -80,13 +80,13 @@ module.exports = function(fn, mic){
     
   }
 
-  console.log('Binding audio-process callback...');
+  //console.log('Binding audio-process callback...');
   jackConnector.bindProcessSync(audioProcess);
 
-  console.log('Activating JACK client...');
+  //console.log('Activating JACK client...');
   jackConnector.activateSync();
 
-  console.log('Auto-connecting to hardware ports...');
+  //console.log('Auto-connecting to hardware ports...');
   caps.forEach(function(e,i){
     jackConnector.registerInPortSync('in_' + (i+1));
     jackConnector.registerOutPortSync('out_' + (i + 1));
@@ -100,9 +100,9 @@ module.exports = function(fn, mic){
   })();
 
   process.on('SIGTERM', function () {
-    console.log('Deactivating JACK client...');
+//    console.log('Deactivating JACK client...');
     jackConnector.deactivateSync();
-    console.log('Closing JACK client...');
+//    console.log('Closing JACK client...');
     jackConnector.closeClient(function (err) {
       if (err) {
         console.error(err);
@@ -110,7 +110,7 @@ module.exports = function(fn, mic){
         return;
       }
 
-      console.log('Exiting...');
+//      console.log('Exiting...');
       process.exit(0);
     });
   });

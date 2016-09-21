@@ -14,48 +14,49 @@ var $ui = function(o){return o}
 var sampleRate = 48000
 
 var st = $ui({
-  bpm: 72,
+  bpm: 88,
   mfy: 6
 })
 var bpm = st.bpm
 timer = $.zerone(bpm, sampleRate)
 generator = new $.chrono()
 generator2 = new $.chrono()
-
 //console.log(timer, st)
+
+//t1.emit('stop')
 //t0.emit('stop')
-t1 = timer.beat(6/4 * 3/2/2, [,1,,1,,,,[,,,1],[,1],,,,[1,,,]], function(ti, b){
-  if(b % 6 ===0)return
+t1 = timer.beat(1, [[1,,1,,],1,1,1,1,1,1,1,[,,,1]], function(ti, b){
   var iir = $.iir(3)
-  var amp = [[1,1],[0,1],[1,1], [0,0]]
+  var amp = [[0,3/5],[0,1], [1,1]]
   var dec = [[0,1],[0,0], [1,0]]
-  var dur = [7/8]
-  if(b % 2 === 0) dur[0] = 3/5 + Math.random() / 9
+  var dur = [1/32/2, 35/32]
+  if(b % 9 === 0) dur[1] *= .75
   var d = dur.reduce(function(a, e){ return a + e}, 0)
   var b = {}
-  b.f = 111 / 2
-  b.m = Math.PI / 2
-  b.i = 5
+  b.f = 51 * 4
+  b.m = 3 
+  b.i =4
   b.c = Math.sqrt(2)
-  b.wave = 'square'
+  b.wave = 'sine'
   var bass = $.meffisto(b)
   var synth = function(t){ t= t - ti
-     bass.m = $.amod(Math.PI / 3, Math.PI / 6, t, 6/4/2/2/2/2/2/2)
-     return iir(bass.ring(t) * $.amod(.667, .111, t, bass.f*$.amod(2, 1, t, bass.f*3))) / 2
+     //bass.m = $.amod(3, Math.PI/9 , t, 1/8)
+     bass.i = $.amod(0, -1/3, t, 1/2)
+     return bass.ring(t)
   }
-  generator.set(ti, synth, {curves: [amp], durations: dur})
+  //generator.set(ti, synth, {curves: [amp, dec], durations: dur})
 
 })
 
 var t12s = 1
 var del = $.jdelay(Math.floor(sampleRate * st.bpm / 60 / 3 / 3), 1/3, 1)
 
-t0 = timer.beat(3/4 * 3/2/2, [[1,,1,],[,1],1,1,[,,1,1],[,1],1,[,,1,1,],[,1,,1],1,[1,,,1],[,1,,[1,1,],[,1,],[,1,],[,1,],[,1,],[,1,],[,1,],[,1,]],[,1,,1],1,[1,,,1],[,,1,1]], function(ti, b, off, swing){
-  var mfy = 1
+t0 = timer.beat(3/4/2 * 3/2/2, [[1,,1,],[,1],1,1,[,,1,1],[,1],1,[,,1,1,],[,1,,1],1,[1,,,1],[,1,,[1,1,],[,1,],[,1,],[,1,],[,1,],[,1,],[,1,],[,1,]],[,1,,1],1,[1,,,1],[,,1,1]], function(ti, b, off, swing){
+  var mfy = 3
   if(b%2 ===0) mfy = st.mfy
   var amp = [[1,0],[1,1],[0,1], [0,1]]
   var dec = [[0,1],[0,0], [1,0]]
-  var dur = [3/64+Math.random()/24]//, 24/64/mfy+Math.random()/16]
+  var dur = [2/64+Math.random()/24]//, 24/64/mfy+Math.random()/16]
   var d = dur.reduce(function(a, e){ return a + e}, 0)
   var iir = $.iir(2)
   var env = $.env([amp], dur)
